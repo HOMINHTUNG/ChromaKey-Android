@@ -1,0 +1,166 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorGreen"
+    android:orientation="vertical">
+
+    <jp.co.cyberagent.android.gpuimage.GPUImageView
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:surface_type="texture_view"
+        app:show_loading="true"
+        />
+
+    <com.tungjobs.chromakeyvideo.GestureImage
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
+    <ImageButton
+        android:id="@+id/img_switch_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:padding="4dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="#00FFFFFF"
+        android:src="@drawable/ic_switch_camera"
+        tools:ignore="HardcodedText" />
+
+    <ImageButton
+        android:layout_alignParentRight="true"
+        android:id="@+id/choose_flash"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="4dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="#00FFFFFF"
+        android:src="@drawable/ic_turn_off_flash"
+        android:layout_below="@id/img_switch_camera"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:layout_alignParentRight="true"
+        android:id="@+id/choose_dimen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="360"
+        android:textStyle="bold"
+        android:textColor="#ffffff"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="#FF1000"
+        android:layout_below="@id/choose_flash"/>
+
+
+    <Button
+        android:id="@+id/btn_record"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="4dp"
+        android:background="#00FFFFFF"
+        android:text="Record"
+        android:textAllCaps="false"
+        android:layout_centerVertical="true"
+        tools:ignore="HardcodedText" />
+
+    <LinearLayout
+        android:id="@+id/bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Smoothing">
+        </TextView>
+
+        <SeekBar
+            style="@style/MySeekBar"
+            android:id="@+id/seekBar"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:max="100" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+        </TextView>
+
+        <ImageButton
+            android:id="@+id/button_choose_filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="#00FFFFFF"
+            android:src="@drawable/ic_pick_color"
+            tools:ignore="HardcodedText" />
+
+        <Button
+            android:id="@+id/choose_color_red"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="4dp"
+            android:background="#00FFFFFF"
+            android:text="Đỏ"
+            android:textAllCaps="false"
+            tools:ignore="HardcodedText" />
+        <Button
+            android:id="@+id/choose_color_gray"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="4dp"
+            android:background="#00FFFFFF"
+            android:text="Xám"
+            android:textAllCaps="false"
+            tools:ignore="HardcodedText" />
+        <Button
+            android:id="@+id/choose_color_black"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="4dp"
+            android:background="#00FFFFFF"
+            android:text="Đen"
+            android:textAllCaps="false"
+            tools:ignore="HardcodedText" />
+
+        <ImageButton
+            android:id="@+id/button_capture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@null"
+            android:padding="12dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="#00FFFFFF"
+            android:src="@android:drawable/ic_menu_camera" />
+
+        <ImageButton
+            android:id="@+id/btnShowLayer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_hide"
+            android:padding="12dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:background="#00FFFFFF"
+            tools:ignore="HardcodedText" />
+    </LinearLayout>
+
+</RelativeLayout>
