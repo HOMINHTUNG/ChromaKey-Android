@@ -10,10 +10,6 @@ import android.view.Surface
 import android.widget.Toast
 import android.content.pm.PackageManager
 import android.hardware.camera2.*
-import android.view.SurfaceHolder
-import android.view.SurfaceView
-import android.media.MediaRecorder
-import java.io.File
 
 
 class CameraSetting(private val activity: Activity) : CameraLoader() {
@@ -26,12 +22,6 @@ class CameraSetting(private val activity: Activity) : CameraLoader() {
 
     private var cameraInstance: Camera? = null
     private var cameraFacing: Int = Camera.CameraInfo.CAMERA_FACING_BACK
-    private val mSurfaceView: SurfaceView? = null
-    private val mSurfaceHolder: SurfaceHolder? = null
-    private val mRecordingStatus: Boolean = false
-    private val mMediaRecorder: MediaRecorder? = null
-    private val mOutputFile: File? = null
-    private val isRecording: Boolean = false
 
     private val cameraManager: CameraManager by lazy {
         activity.getSystemService(Context.CAMERA_SERVICE) as CameraManager

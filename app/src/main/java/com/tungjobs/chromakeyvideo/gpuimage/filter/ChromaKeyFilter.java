@@ -3,8 +3,7 @@ package com.tungjobs.chromakeyvideo.gpuimage.filter;
 import android.opengl.GLES20;
 import android.util.Log;
 
-import jp.co.cyberagent.android.gpuimage.GPUImageTwoInputFilter;
-
+import jp.co.cyberagent.android.gpuimage.filter.GPUImageTwoInputFilter;
 
 public class ChromaKeyFilter extends GPUImageTwoInputFilter {
     public static final String CHROMA_KEY_BLEND_FRAGMENT_SHADER_CAMERA =

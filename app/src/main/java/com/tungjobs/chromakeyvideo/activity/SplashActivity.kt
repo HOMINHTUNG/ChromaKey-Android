@@ -15,7 +15,7 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        if (!hasCameraPermission() || !hasStoragePermission() || !hasRecordAudioPermission()) {
+        if (!hasCameraPermission() || !hasStoragePermission() || !hasAudioPermission()) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
@@ -25,7 +25,7 @@ class SplashActivity : AppCompatActivity() {
                 REQUEST_CAMERA
             )
         } else {
-            startActivity(Intent(this, CameraActivity::class.java))
+            startActivity(Intent(this, MainActivity::class.java))
         }
     }
 
@@ -38,7 +38,7 @@ class SplashActivity : AppCompatActivity() {
             && grantResults[0] == PackageManager.PERMISSION_GRANTED
             && grantResults[1] == PackageManager.PERMISSION_GRANTED
         ) {
-            startActivity(Intent(this, CameraActivity::class.java))
+            startActivity(Intent(this, MainActivity::class.java))
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
@@ -57,8 +57,7 @@ class SplashActivity : AppCompatActivity() {
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         ) == PackageManager.PERMISSION_GRANTED
     }
-
-    private fun hasRecordAudioPermission(): Boolean {
+    private fun hasAudioPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.RECORD_AUDIO

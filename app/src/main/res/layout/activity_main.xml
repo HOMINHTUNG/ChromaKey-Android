@@ -6,15 +6,14 @@
     android:background="@color/colorGreen"
     android:orientation="vertical">
 
-<!--    <jp.co.cyberagent.android.gpuimage.GPUImageView-->
-<!--        android:id="@+id/surfaceView"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        app:surface_type="texture_view"-->
-<!--        app:show_loading="true"-->
-<!--        />-->
+    <jp.co.cyberagent.android.gpuimage.GPUImageView
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:gpuimage_surface_type="texture_view"
+        />
 
-    <com.tungjobs.chromakeyvideo.component.GestureImage
+    <com.tungjobs.chromakeyvideo.view.GestureImage
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
