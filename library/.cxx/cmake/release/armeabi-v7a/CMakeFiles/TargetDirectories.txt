@@ -1,0 +1,3 @@
+/Users/hominhtung/Work/ChromaKey-Android/library/.cxx/cmake/release/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/hominhtung/Work/ChromaKey-Android/library/.cxx/cmake/release/armeabi-v7a/CMakeFiles/rebuild_cache.dir
+/Users/hominhtung/Work/ChromaKey-Android/library/.cxx/cmake/release/armeabi-v7a/CMakeFiles/yuv-decoder.dir

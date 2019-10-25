@@ -1,0 +1,16 @@
+{
+  "buildFiles": [
+    "/Users/hominhtung/Work/ChromaKey-Android/library/src/main/cpp/CMakeLists.txt"
+  ],
+  "cleanCommands": [
+    "/Users/hominhtung/Library/Android/sdk/cmake/3.6.4111459/bin/cmake --build /Users/hominhtung/Work/ChromaKey-Android/library/.cxx/cmake/debug/arm64-v8a --target clean"
+  ],
+  "libraries": {
+    "yuv-decoder-Debug-arm64-v8a": {
+      "artifactName": "yuv-decoder",
+      "buildCommand": "/Users/hominhtung/Library/Android/sdk/cmake/3.6.4111459/bin/cmake --build /Users/hominhtung/Work/ChromaKey-Android/library/.cxx/cmake/debug/arm64-v8a --target yuv-decoder",
+      "abi": "arm64-v8a",
+      "output": "/Users/hominhtung/Work/ChromaKey-Android/library/build/intermediates/cmake/debug/obj/arm64-v8a/libyuv-decoder.so"
+    }
+  }
+}
