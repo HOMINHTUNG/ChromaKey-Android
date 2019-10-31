@@ -29,7 +29,10 @@ object GPUImageFilterTools {
         listener: (filter: GPUImageFilter) -> Unit
     ) {
         val filters = FilterList().apply {
-            addFilter("Blend (Chroma Key)",
+            addFilter("GPUImageChromaKeyBlendFilter",
+                FilterType.BLEN_GPU_CHROMA_KEY
+            )
+            addFilter("ChromaKeyFilter",
                 FilterType.BLEND_CHROMA_KEY
             )
         }
@@ -49,9 +52,17 @@ object GPUImageFilterTools {
 
     private fun createFilterForType(context: Context, type: FilterType): GPUImageFilter {
         return when (type) {
-            FilterType.BLEND_CHROMA_KEY -> createBlendFilter(
+            FilterType.BLEND_CHROMA_KEY -> ChromaKeyFilter()
+            FilterType.FILTER_GROUP -> GPUImageFilterGroup(
+                listOf(
+                    GPUImageContrastFilter(),
+                    GPUImageDirectionalSobelEdgeDetectionFilter(),
+                    GPUImageGrayscaleFilter()
+                )
+            )
+            FilterType.BLEN_GPU_CHROMA_KEY -> createBlendFilter(
                 context,
-                ChromaKeyFilter::class.java
+                GPUImageChromaKeyBlendFilter::class.java
             )
         }
     }
@@ -73,7 +84,7 @@ object GPUImageFilterTools {
     }
 
     private enum class FilterType {
-        BLEND_CHROMA_KEY
+        BLEND_CHROMA_KEY,FILTER_GROUP,BLEN_GPU_CHROMA_KEY
     }
 
     private class FilterList {

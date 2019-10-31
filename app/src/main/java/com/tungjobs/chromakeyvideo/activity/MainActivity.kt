@@ -1,11 +1,10 @@
 package com.tungjobs.chromakeyvideo.activity
 
 import android.annotation.SuppressLint
-import android.graphics.Color
-import android.os.Build
+import android.graphics.*
+import android.opengl.GLSurfaceView
+import android.os.*
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.os.Environment
 import android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
 import android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
 import android.util.Log
@@ -13,27 +12,32 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.*
 import androidx.annotation.RequiresApi
+import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
 import androidx.core.view.doOnLayout
+import com.github.hiteshsondhi88.libffmpeg.FFmpeg
+import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler
+import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException
 import com.tungjobs.chromakeyvideo.gpuimage.filter.ChromaKeyFilter
 import com.tungjobs.chromakeyvideo.gpuimage.filter.GPUImageFilterTools
 import com.tungjobs.chromakeyvideo.gpuimage.filter.GPUImageMovieWriter
 import com.tungjobs.chromakeyvideo.R
 import com.tungjobs.chromakeyvideo.camera.CameraLoader
 import com.tungjobs.chromakeyvideo.camera.CameraSetting
+import com.tungjobs.chromakeyvideo.gpuimage.ImageAdapter
 import com.tungjobs.chromakeyvideo.view.GestureImage
+import jp.co.cyberagent.android.gpuimage.GLTextureView
 import jp.co.cyberagent.android.gpuimage.GPUImage
 import jp.co.cyberagent.android.gpuimage.GPUImageView
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageChromaKeyBlendFilter
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilterGroup
-import jp.co.cyberagent.android.gpuimage.filter.GPUImageLevelsFilter
+import jp.co.cyberagent.android.gpuimage.filter.*
 import jp.co.cyberagent.android.gpuimage.util.Rotation
+import kotlinx.android.synthetic.main.activity_main.view.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.log
 import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity(), View.OnTouchListener {
@@ -46,31 +50,67 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
     private val cameraLoader: CameraLoader by lazy {
         CameraSetting(this)
     }
-
-    private var mMovieWriter: GPUImageMovieWriter? = null
+    private var mMovieWriter: ChromaKeyFilter? = null
 //    private var filter: GPUImageFilter? = null
     private var filterAdjuster: GPUImageFilterTools.FilterAdjuster? = null
     private var isPickColor = false
     private var isFlash = false
     private var isRecord = false
+    private var imageAdapter: ImageAdapter?  = null
+    private var ffmpegObject:FFMPEGObject? = null
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    @SuppressLint("ResourceAsColor", "NewApi")
+    lateinit var handler: Handler
+    private var isConvert = false
+    private val updateTextTask = object : Runnable {
+        override fun run() {
+            if (!isConvert){
+                handler.postDelayed(this, 40)
+                convertImagetoVideo()
+            }
+        }
+    }
+
+    fun convertImagetoVideo(){
+        if (imageAdapter!!.count >= 10){
+            isConvert = true
+            handler?.removeCallbacks(updateTextTask)
+            handler.removeMessages(0)
+            Log.d("convertImagetoVideo","-----createMP4-----")
+            if (imageAdapter!!.exportToMP4()) run {
+                ffmpegObject!!.createMP4()
+                Toast.makeText(this@MainActivity, "Create Success", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }else{
+            val newBitmap = Bitmap.createBitmap(gpuImageView.capture().width,
+                gpuImageView.capture().height,
+                gpuImageView.capture().config)
+            val canvas = Canvas(newBitmap)
+            canvas.drawColor(Color.GREEN)
+            canvas.drawBitmap(gpuImageView.capture(),0f,0f,null)
+            imageAdapter?.addImage(newBitmap)
+            Log.d("convertImagetoVideo","imageAdapter count = "+imageAdapter!!.count)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         buttonEvent()
 
+        handler = Handler(Looper.getMainLooper())
+        imageAdapter = ImageAdapter(this)
+        ffmpegObject = FFMPEGObject(this,imageAdapter)
         gpuImageView.setRotation(getRotation(cameraLoader.getCameraOrientation()))
-        gpuImageView.setRenderMode(GPUImageView.RENDERMODE_WHEN_DIRTY)
+        gpuImageView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY)
+        gpuImageView.setBackgroundColor(Color.GREEN)
         gpuImageView.setOnTouchListener(this)
 
-        mMovieWriter = GPUImageMovieWriter()
-        gpuImageView.setFilter(mMovieWriter)
+        findViewById<View>(R.id.choose_color_black).performClick()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+
     fun buttonEvent() {
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
@@ -81,7 +121,9 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
         })
         findViewById<View>(R.id.button_capture).setOnClickListener {
-            saveSnapshot()
+//            saveSnapshot()
+
+            handler.post(updateTextTask)
         }
 
         findViewById<View>(R.id.choose_color_red).setOnClickListener {
@@ -162,6 +204,8 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
             }
 
             isPickColor = !isPickColor
+
+            GPUImageFilterTools.showDialog(this) { filter -> switchFilterTo(filter) }
         }
     }
 
@@ -228,13 +272,11 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
     }
 
     private fun switchFilterTo(filter: GPUImageFilter) {
-        val group = GPUImageFilterGroup()
-        group.addFilter(filter)
-        group.addFilter(mMovieWriter)
-        group.updateMergedFilters()
-        gpuImageView.setFilter(group)
 
-        filterAdjuster = GPUImageFilterTools.FilterAdjuster(group)
+        gpuImageView.filter = filter
+        gpuImageView.requestRender()
+
+        filterAdjuster = GPUImageFilterTools.FilterAdjuster(filter)
         filterAdjuster?.adjust(seekBar.progress)
     }
 
@@ -261,7 +303,6 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
         updateFilterColor(Color.red(pixel), Color.green(pixel), Color.blue(pixel))
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun updateFilterColor(_red: Int, _reen: Int, _blue: Int) {
         val red = 1.0f * _red / 255.0f
         val green = 1.0f * _reen / 255.0f
@@ -279,7 +320,7 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
             red, green, blue
         )
         filter.setSmoothing(1.0f)
-        btnColor.setBackgroundColor(Color.rgb(red, green, blue))
+//        btnColor.setBackgroundColor(Color)
         switchFilterTo(filter)
     }
 

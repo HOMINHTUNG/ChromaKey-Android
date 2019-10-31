@@ -1,6 +1,8 @@
 package com.tungjobs.chromakeyvideo.gpuimage.filter;
 
+import android.graphics.PixelFormat;
 import android.opengl.EGL14;
+import android.opengl.GLSurfaceView;
 
 import com.tungjobs.chromakeyvideo.gpuimage.encoder.EglCore;
 import com.tungjobs.chromakeyvideo.gpuimage.encoder.MediaAudioEncoder;
@@ -33,6 +35,9 @@ public class GPUImageMovieWriter extends GPUImageFilter {
 
     private boolean mIsRecording = false;
 
+    public GPUImageMovieWriter(String type){
+        super(NO_FILTER_VERTEX_SHADER,type);
+    }
     @Override
     public void onInit() {
         super.onInit();
@@ -41,6 +46,16 @@ public class GPUImageMovieWriter extends GPUImageFilter {
         mEGLContext = mEGL.eglGetCurrentContext();
         mEGLScreenSurface = mEGL.eglGetCurrentSurface(EGL10.EGL_DRAW);
     }
+
+//    public void setGLSurfaceView(final GLSurfaceView view) {
+//        mGlSurfaceView = view;
+//        mGlSurfaceView.setEGLContextClientVersion(2);
+//        mGlSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+//        mGlSurfaceView.getHolder().setFormat(PixelFormat.RGBA_8888);
+//        mGlSurfaceView.setRenderer(mRenderer);
+//        mGlSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+//        mGlSurfaceView.requestRender();
+//    }
 
     @Override
     public void onDraw(int textureId, FloatBuffer cubeBuffer, FloatBuffer textureBuffer) {

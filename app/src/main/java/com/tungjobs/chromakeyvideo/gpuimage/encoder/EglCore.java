@@ -257,6 +257,7 @@ public final class EglCore {
         };
         EGLSurface eglSurface = EGL14.eglCreatePbufferSurface(mEGLDisplay, mEGLConfig,
                 surfaceAttribs, 0);
+
         checkEglError("eglCreatePbufferSurface");
         if (eglSurface == null) {
             throw new RuntimeException("surface was null");
