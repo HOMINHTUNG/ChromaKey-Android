@@ -1,17 +1,27 @@
 package com.tungjobs.chromakeyvideo.gpuimage;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.Toast;
+
+import org.jcodec.api.SequenceEncoder;
+import org.jcodec.api.android.AndroidSequenceEncoder;
+import org.jcodec.common.io.FileChannelWrapper;
+import org.jcodec.common.io.NIOUtils;
+import org.jcodec.common.model.Rational;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +33,7 @@ public class ImageAdapter extends BaseAdapter {
     final String DIRECTORY = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
     private Context mContext;
     private List<Bitmap> array = new ArrayList<Bitmap>();
+    private SequenceEncoder sequenceEncoder = null;
 
     public ImageAdapter(Context c) {
         mContext = c;
@@ -63,38 +74,24 @@ public class ImageAdapter extends BaseAdapter {
         array.remove(pos);
         notifyDataSetChanged();
     }
-    public boolean exportToMP4() {
+    public void exportToMP4(File file) {
         if (array.size() == 0)
-            return false;
+            return;
 
-        File directory = new File(DIRECTORY + "/video_frame");
-        if (directory.isDirectory())
-        {
-            String[] children = directory.list();
-            for (int i = 0; i < children.length; i++)
-            {
-                new File(directory, children[i]).delete();
+        Log.d("convertImagetoVideo", "-----Progressing-----");
+        FileChannelWrapper out = null;
+        try {
+            out = NIOUtils.writableFileChannel(file.getAbsolutePath());
+            AndroidSequenceEncoder encoder = new AndroidSequenceEncoder(out, Rational.R(15, 1));
+            for (Bitmap bitmap : array) {
+                encoder.encodeImage(bitmap);
             }
+            encoder.finish();
+            Log.d("convertImagetoVideo", "-----Finish-----");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            NIOUtils.closeQuietly(out);
         }
-        //create image frame
-        File myDir = new File(DIRECTORY + "/video_frame");
-        myDir.mkdirs();
-        for (int i=0; i<array.size();i++) {
-            String fname = "frame-" + i + ".png";
-            File file = new File(myDir, fname);
-            if (file.exists())
-                file.delete();
-            try {
-                FileOutputStream out = new FileOutputStream(file);
-                array.get(i).setHasAlpha(true);
-                array.get(i).compress(Bitmap.CompressFormat.PNG, 80, out);
-                out.flush();
-                out.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        return true;
     }
 }

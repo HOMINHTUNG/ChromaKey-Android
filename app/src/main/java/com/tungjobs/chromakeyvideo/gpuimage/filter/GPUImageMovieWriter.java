@@ -35,9 +35,6 @@ public class GPUImageMovieWriter extends GPUImageFilter {
 
     private boolean mIsRecording = false;
 
-    public GPUImageMovieWriter(String type){
-        super(NO_FILTER_VERTEX_SHADER,type);
-    }
     @Override
     public void onInit() {
         super.onInit();

@@ -2,6 +2,7 @@ package com.tungjobs.chromakeyvideo.activity
 
 import android.annotation.SuppressLint
 import android.graphics.*
+import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.os.*
 import androidx.appcompat.app.AppCompatActivity
@@ -24,6 +25,7 @@ import com.tungjobs.chromakeyvideo.gpuimage.filter.ChromaKeyFilter
 import com.tungjobs.chromakeyvideo.gpuimage.filter.GPUImageFilterTools
 import com.tungjobs.chromakeyvideo.gpuimage.filter.GPUImageMovieWriter
 import com.tungjobs.chromakeyvideo.R
+import com.tungjobs.chromakeyvideo.camera.Camera2Setting
 import com.tungjobs.chromakeyvideo.camera.CameraLoader
 import com.tungjobs.chromakeyvideo.camera.CameraSetting
 import com.tungjobs.chromakeyvideo.gpuimage.ImageAdapter
@@ -34,9 +36,11 @@ import jp.co.cyberagent.android.gpuimage.GPUImageView
 import jp.co.cyberagent.android.gpuimage.filter.*
 import jp.co.cyberagent.android.gpuimage.util.Rotation
 import kotlinx.android.synthetic.main.activity_main.view.*
+import org.jcodec.api.SequenceEncoder
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.log
 import kotlin.math.roundToInt
 
@@ -50,47 +54,36 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
     private val cameraLoader: CameraLoader by lazy {
         CameraSetting(this)
     }
-    private var mMovieWriter: ChromaKeyFilter? = null
-//    private var filter: GPUImageFilter? = null
     private var filterAdjuster: GPUImageFilterTools.FilterAdjuster? = null
     private var isPickColor = false
     private var isFlash = false
     private var isRecord = false
-    private var imageAdapter: ImageAdapter?  = null
-    private var ffmpegObject:FFMPEGObject? = null
+    private var imageAdapter: ImageAdapter? = null
 
     lateinit var handler: Handler
     private var isConvert = false
     private val updateTextTask = object : Runnable {
         override fun run() {
-            if (!isConvert){
-                handler.postDelayed(this, 40)
+            if (!isConvert) {
+                handler.postDelayed(this, 100)
                 convertImagetoVideo()
             }
         }
     }
 
-    fun convertImagetoVideo(){
-        if (imageAdapter!!.count >= 10){
-            isConvert = true
-            handler?.removeCallbacks(updateTextTask)
-            handler.removeMessages(0)
-            Log.d("convertImagetoVideo","-----createMP4-----")
-            if (imageAdapter!!.exportToMP4()) run {
-                ffmpegObject!!.createMP4()
-                Toast.makeText(this@MainActivity, "Create Success", Toast.LENGTH_SHORT)
-                    .show()
-            }
-        }else{
-            val newBitmap = Bitmap.createBitmap(gpuImageView.capture().width,
-                gpuImageView.capture().height,
-                gpuImageView.capture().config)
+    fun convertImagetoVideo() {
+            val bitmap = gpuImageView.capture()
+
+            val newBitmap = Bitmap.createBitmap(
+                bitmap.width,
+                bitmap.height,
+                bitmap.config
+            )
             val canvas = Canvas(newBitmap)
             canvas.drawColor(Color.GREEN)
-            canvas.drawBitmap(gpuImageView.capture(),0f,0f,null)
+            canvas.drawBitmap(bitmap, 0f, 0f, null)
             imageAdapter?.addImage(newBitmap)
-            Log.d("convertImagetoVideo","imageAdapter count = "+imageAdapter!!.count)
-        }
+            Log.d("convertImagetoVideo", "imageAdapter count = " + imageAdapter!!.count)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,13 +94,10 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
 
         handler = Handler(Looper.getMainLooper())
         imageAdapter = ImageAdapter(this)
-        ffmpegObject = FFMPEGObject(this,imageAdapter)
         gpuImageView.setRotation(getRotation(cameraLoader.getCameraOrientation()))
         gpuImageView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY)
         gpuImageView.setBackgroundColor(Color.GREEN)
         gpuImageView.setOnTouchListener(this)
-
-        findViewById<View>(R.id.choose_color_black).performClick()
     }
 
 
@@ -121,9 +111,7 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
             override fun onStopTrackingTouch(seekBar: SeekBar) {}
         })
         findViewById<View>(R.id.button_capture).setOnClickListener {
-//            saveSnapshot()
-
-            handler.post(updateTextTask)
+            saveSnapshot()
         }
 
         findViewById<View>(R.id.choose_color_red).setOnClickListener {
@@ -138,15 +126,17 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
 
         findViewById<View>(R.id.btn_record).setOnClickListener {
             if (!isRecord) {
-                val recordFile = getOutputMediaFile(MEDIA_TYPE_VIDEO)
-                mMovieWriter!!.startRecording(
-                    recordFile!!.getAbsolutePath(),
-                    gpuImageView.width,
-                    gpuImageView.height)
+                isConvert = false
+                handler.post(updateTextTask)
+
                 findViewById<Button>(R.id.btn_record).text = "Stop"
             } else {
+                isConvert = true
+                Log.d("convertImagetoVideo", "-----createMP4-----")
+                Toast.makeText(this,"Process MP4...",Toast.LENGTH_LONG).show()
+                val recordFile = getOutputMediaFile(MEDIA_TYPE_VIDEO)
+                imageAdapter?.exportToMP4(recordFile)
 
-                mMovieWriter!!.stopRecording()
                 findViewById<Button>(R.id.btn_record).text = "Record"
             }
 
@@ -178,7 +168,7 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
             }
             setOnClickListener {
                 cameraLoader.switchCamera()
-                gpuImageView.setRotation(1.0f*cameraLoader.getCameraOrientation())
+                gpuImageView.setRotation(1.0f * cameraLoader.getCameraOrientation())
             }
         }
 
@@ -220,9 +210,9 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
         cameraLoader.onPause()
         super.onPause()
 
-        if (isRecord) {
-            mMovieWriter!!.stopRecording()
-        }
+//        if (isRecord) {
+//            mMovieWriter!!.stopRecording()
+//        }
     }
 
     private fun saveSnapshot() {
@@ -271,8 +261,37 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
         }
     }
 
-    private fun switchFilterTo(filter: GPUImageFilter) {
+    private fun setupFilterCameraRecord() {
 
+//        val bitmapTransparent = gpuImageView.capture()
+//        val newBitmap = Bitmap.createBitmap(
+//            bitmapTransparent.width,
+//            bitmapTransparent.height,
+//            bitmapTransparent.config
+//        )
+//        val canvas = Canvas(newBitmap)
+//        canvas.drawColor(Color.GREEN)
+//        canvas.drawBitmap(bitmapTransparent, 0f, 0f, null)
+//
+//
+//        val filter = GPUImageChromaKeyBlendFilter()
+//        filter.setThresholdSensitivity(0.4f)
+//        filter.setColorToReplace(
+//            Color.BLACK.red.toFloat(),
+//            Color.BLACK.green.toFloat(), Color.BLACK.blue.toFloat()
+//        )
+//        filter.setSmoothing(0.1f)
+//        filter.bitmap = newBitmap
+//
+//        val group = GPUImageFilterGroup()
+//        group.addFilter(filter)
+//        group.addFilter(mMovieWriter)
+//        group.updateMergedFilters()
+//        gpuImageView.filter = group
+//        gpuImageView.requestRender()
+    }
+
+    private fun switchFilterTo(filter: GPUImageFilter) {
         gpuImageView.filter = filter
         gpuImageView.requestRender()
 
@@ -291,7 +310,7 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun getPixelColor(x:Int, y:Int) {
+    fun getPixelColor(x: Int, y: Int) {
 
         Toast.makeText(
             this,
@@ -319,6 +338,9 @@ class MainActivity : AppCompatActivity(), View.OnTouchListener {
             ChromaKeyFilter.CHROMA_KEY_BLEND_FRAGMENT_SHADER_CAMERA,
             red, green, blue
         )
+
+        filter.setThresholdSensitivity(0.4f)
+        filter.setColorToReplace(red, green, blue)
         filter.setSmoothing(1.0f)
 //        btnColor.setBackgroundColor(Color)
         switchFilterTo(filter)

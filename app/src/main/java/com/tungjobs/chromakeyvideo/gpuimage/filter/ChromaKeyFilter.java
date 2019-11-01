@@ -7,7 +7,7 @@ import jp.co.cyberagent.android.gpuimage.filter.GPUImage3x3TextureSamplingFilter
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageFilter;
 import jp.co.cyberagent.android.gpuimage.filter.GPUImageTwoInputFilter;
 
-public class ChromaKeyFilter extends GPUImageMovieWriter {
+public class ChromaKeyFilter extends GPUImageTwoInputFilter {
     public static final String CHROMA_KEY_BLEND_FRAGMENT_SHADER_CAMERA =
             " precision highp float;\n" +
                     " \n" + "const vec3 W = vec3(1.0, 1.0, 1.0);\n" + " \n"+
